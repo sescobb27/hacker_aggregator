@@ -10,6 +10,7 @@ defmodule HackerAggregator do
     children = [
       # Start the endpoint when the application starts
       supervisor(HackerAggregator.Endpoint, []),
+      worker(HackerAggregator.Aggregator.Background, [])
       # Start your own worker by calling: HackerAggregator.Worker.start_link(arg1, arg2, arg3)
       # worker(HackerAggregator.Worker, [arg1, arg2, arg3]),
     ]
