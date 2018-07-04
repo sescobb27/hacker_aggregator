@@ -40,4 +40,32 @@ defmodule HackerAggregator.Aggregator.BackgroundTest do
       } = story
     end
   end
+
+  test "returns current stories on error fetching top stories" do
+    get_mock = fn _ ->
+      {:error, :server_error}
+    end
+
+    with_mock Req, get: get_mock do
+      send(Background, :poll)
+      assert [] == Background.get_top_stories()
+    end
+  end
+
+  test "returns current stories on error fetching stories" do
+    get_mock = fn uri ->
+      cond do
+        String.ends_with?(uri, "topstories.json") ->
+          {:ok, "[8863]"}
+
+        String.ends_with?(uri, "item/8863.json") ->
+          {:error, :server_error}
+      end
+    end
+
+    with_mock Req, get: get_mock do
+      send(Background, :poll)
+      assert [] == Background.get_top_stories()
+    end
+  end
 end
