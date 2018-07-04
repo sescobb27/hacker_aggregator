@@ -67,9 +67,7 @@ defmodule HackerAggregator.Api.HackerNews do
   defp maybe_do_get_top_stories({:ok, top_n_story_ids}) do
     maybe_stories =
       top_n_story_ids
-      |> Enum.map(fn story_id ->
-        maybe_get_story(story_id)
-      end)
+      |> async_get_stories()
 
     stories = for {:ok, story} <- maybe_stories, do: story
 
@@ -105,5 +103,16 @@ defmodule HackerAggregator.Api.HackerNews do
       end)
 
     {:error, error}
+  end
+
+  defp async_get_stories(top_n_story_ids) do
+    HackerAggregator.TaskSupervisor
+    |> Task.Supervisor.async_stream_nolink(top_n_story_ids, fn story_id ->
+      maybe_get_story(story_id)
+    end)
+    |> Stream.map(fn {:ok, result} ->
+      result
+    end)
+    |> Enum.to_list()
   end
 end

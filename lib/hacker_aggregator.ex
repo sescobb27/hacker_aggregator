@@ -11,7 +11,8 @@ defmodule HackerAggregator do
       # Start the endpoint when the application starts
       supervisor(HackerAggregator.Endpoint, []),
       worker(HackerAggregator.Aggregator.Background, []),
-      worker(HackerAggregator.DB.InMemoryDB, [])
+      worker(HackerAggregator.DB.InMemoryDB, []),
+      {Task.Supervisor, name: HackerAggregator.TaskSupervisor}
       # Start your own worker by calling: HackerAggregator.Worker.start_link(arg1, arg2, arg3)
       # worker(HackerAggregator.Worker, [arg1, arg2, arg3]),
     ]
