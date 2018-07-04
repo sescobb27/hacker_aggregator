@@ -9,6 +9,9 @@ defmodule HackerAggregator.DB.InMemoryDB do
     GenServer.start_link(__MODULE__, args, name: @name)
   end
 
+  # ETS with read concurrency so all request can read the InMermoryDB concurrently and
+  # we don't block our Background Aggregator with calls to it, also it is the only one writing to it,
+  # so we don't need write concurrency
   def init(_) do
     :ets.new(@table, [
       :named_table,
@@ -53,6 +56,8 @@ defmodule HackerAggregator.DB.InMemoryDB do
     end
   end
 
+  # paginate over an ETS table using next function, i didn't know how to paginate an ETS table
+  # so I tried to do it in the most simple way
   @spec pagination(last_id :: Story.id(), n :: pos_integer()) :: list(Story.t())
   def pagination(last_id, n \\ 10)
   def pagination(0, _), do: top_stories(10)

@@ -3,6 +3,9 @@ defmodule HackerAggregator.StoriesController do
 
   alias HackerAggregator.DB.InMemoryDB
 
+  # we are using "from" query param to fetch 10 stories from the last one seen, it may not be the best
+  # pagination system but i couldn't figure it out how to paginate properly over ETS without converting
+  # all the table into a list and paginate it (but is the same as the pagination system from Stripe)
   def index(conn, params) do
     try do
       stories =

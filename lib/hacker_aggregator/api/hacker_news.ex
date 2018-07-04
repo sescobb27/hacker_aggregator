@@ -73,7 +73,7 @@ defmodule HackerAggregator.Api.HackerNews do
 
     if Enum.empty?(stories) do
       errors = for {:error, error} <- maybe_stories, do: error
-      more_ocurred_error(errors)
+      error_with_more_occurrences(errors)
     else
       {:ok, stories}
     end
@@ -85,8 +85,11 @@ defmodule HackerAggregator.Api.HackerNews do
     |> maybe_decode(as: %Story{})
   end
 
-  @spec more_ocurred_error(errors :: list()) :: Req.error() | decode_error()
-  defp more_ocurred_error(errors) do
+  # As we are fetching items we can fail to get one, more or even all of those events for some reason
+  # thats why if we couldn't get any event we are going to return the error with more occurrences
+  # so the process making request take actions on it e.g circuit-break the operation, retry later etc
+  @spec error_with_more_occurrences(errors :: list()) :: Req.error() | decode_error()
+  defp error_with_more_occurrences(errors) do
     {error, _} =
       Enum.reduce(errors, %{}, fn error, acc ->
         {_, new_acc} =
@@ -105,6 +108,11 @@ defmodule HackerAggregator.Api.HackerNews do
     {:error, error}
   end
 
+  # Fetch stories in parallel (Defaults to System.schedulers_online/0) but stream them one by one to process them
+  # sequentialy, it has a default timeout (5seg) when no receiving reply from ANY of the spawned tasks.
+  # I used `async_stream_nolink` because i wanted a new process but i don't want it to be linked to the
+  # current one, so it doesn't get unwanted messages and also if a task fails doesn't affect any other process
+  # or task
   defp async_get_stories(top_n_story_ids) do
     HackerAggregator.TaskSupervisor
     |> Task.Supervisor.async_stream_nolink(top_n_story_ids, fn story_id ->
