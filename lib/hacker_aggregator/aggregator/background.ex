@@ -55,9 +55,13 @@ defmodule HackerAggregator.Aggregator.Background do
 
   defp broadcast(stories) do
     case HackerAggregator.Endpoint.broadcast("stories", "new_stories", %{stories: stories}) do
-      :ok -> :ok
+      :ok ->
+        :ok
+
       {:error, error} ->
-        Logger.error("error broadcasting channel(stories) event(new_stories) reason: #{inspect error}")
+        Logger.error(
+          "error broadcasting channel(stories) event(new_stories) reason: #{inspect(error)}"
+        )
     end
   end
 end

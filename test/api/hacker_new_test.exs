@@ -119,8 +119,7 @@ defmodule HackerAggregator.Api.HackerNewsTest do
           {:ok, "[8863]"}
 
         String.ends_with?(uri, "item/8863.json") ->
-          {:ok,
-           "{\"invalid_key\":}"}
+          {:ok, "{\"invalid_key\":}"}
       end
     end
 

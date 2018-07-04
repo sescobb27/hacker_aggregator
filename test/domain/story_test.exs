@@ -8,6 +8,6 @@ defmodule HackerAggregator.Domain.StoryTest do
   end
 
   test "creates a story with attrs" do
-    assert %Story{id: 1} = Story.new([id: 1])
+    assert %Story{id: 1} = Story.new(id: 1)
   end
 end
