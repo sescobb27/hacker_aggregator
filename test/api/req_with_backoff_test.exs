@@ -1,5 +1,5 @@
 defmodule HackerAggregator.Api.ReqWithBackoffTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   import Mock
 
   alias HackerAggregator.Api.ReqWithBackoff, as: Req
@@ -16,7 +16,7 @@ defmodule HackerAggregator.Api.ReqWithBackoffTest do
 
   test "fails with :not_found if 404" do
     get_mock = fn _ ->
-      {:ok, %HTTPoison.Response{status_code: 404, body: "Test Body"}}
+      {:ok, %HTTPoison.Response{status_code: 404}}
     end
 
     with_mock HTTPoison, get: get_mock do
