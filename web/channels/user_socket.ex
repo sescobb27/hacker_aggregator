@@ -2,7 +2,7 @@ defmodule HackerAggregator.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", HackerAggregator.RoomChannel
+  channel "stories", HackerAggregator.StoriesChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

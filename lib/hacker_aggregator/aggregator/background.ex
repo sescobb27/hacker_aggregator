@@ -35,7 +35,7 @@ defmodule HackerAggregator.Aggregator.Background do
   end
 
   defp fetch_top_stories() do
-    case HackerNews.get_top_stories(1) do
+    case HackerNews.get_top_stories() do
       {:error, _error} ->
         # TODO: circuit-breaker after some attempts
         nil
@@ -43,6 +43,15 @@ defmodule HackerAggregator.Aggregator.Background do
       {:ok, stories} ->
         Logger.info("successfully poll #{length(stories)}")
         InMemoryDB.save(stories)
+        broadcast(stories)
+    end
+  end
+
+  defp broadcast(stories) do
+    case HackerAggregator.Endpoint.broadcast("stories", "new_stories", %{stories: stories}) do
+      :ok -> :ok
+      {:error, error} ->
+        Logger.error("error broadcasting channel(stories) event(new_stories) reason: #{inspect error}")
     end
   end
 end

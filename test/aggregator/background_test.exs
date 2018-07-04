@@ -79,4 +79,30 @@ defmodule HackerAggregator.Aggregator.BackgroundTest do
       assert [] = InMemoryDB.top_stories()
     end
   end
+
+  test "broadcasts new stories when successfully polled stories" do
+    get_mock = fn uri ->
+      cond do
+        String.ends_with?(uri, "topstories.json") ->
+          {:ok, "[8863]"}
+
+        String.ends_with?(uri, "item/8863.json") ->
+          {:ok,
+           "{\"url\":\"http://www.getdropbox.com/u/2/screencast.html\",\"type\":\"story\",\"title\":\"My YC app: Dropbox - Throw away your USB drive\",\"time\":1175714200,\"score\":111,\"kids\":[],\"id\":8863,\"descendants\":71,\"by\":\"dhouston\"}"}
+      end
+    end
+
+    broadcast_mock = fn _, _, _ ->
+      :ok
+    end
+
+    with_mocks([
+      {Req, [], get: get_mock},
+      {HackerAggregator.Endpoint, [], broadcast: broadcast_mock}
+    ]) do
+      send(Background, {:poll, self()})
+      assert_receive :done, 1000
+      assert called(HackerAggregator.Endpoint.broadcast("stories", "new_stories", %{}))
+    end
+  end
 end

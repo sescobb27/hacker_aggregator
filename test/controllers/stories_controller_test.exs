@@ -20,6 +20,10 @@ defmodule HackerAggregator.StoriesControllerTest do
       }
     ]
 
+    on_exit(fn ->
+      InMemoryDB.clear()
+    end)
+
     true = InMemoryDB.save(stories)
     :ok
   end
