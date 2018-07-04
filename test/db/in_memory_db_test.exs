@@ -1,7 +1,5 @@
-defmodule HackerAggregator.Aggregator.BackgroundTest do
+defmodule HackerAggregator.Aggregator.InMemoryDBTest do
   use ExUnit.Case
-
-  import Mock
 
   alias HackerAggregator.Domain.Story
   alias HackerAggregator.DB.InMemoryDB
@@ -22,6 +20,10 @@ defmodule HackerAggregator.Aggregator.BackgroundTest do
       }
     ]
 
+    on_exit(fn ->
+      InMemoryDB.clear()
+    end)
+
     {:ok, stories: stories}
   end
 
@@ -29,7 +31,14 @@ defmodule HackerAggregator.Aggregator.BackgroundTest do
     assert true = InMemoryDB.save(stories)
     stories = :ets.tab2list(:in_memory_db)
     assert length(stories) == 2
-    assert [{8863, _}, {8864, _}] = stories
+
+    story_ids =
+      Enum.map(stories, fn {id, _} ->
+        id
+      end)
+
+    assert Enum.member?(story_ids, 8863)
+    assert Enum.member?(story_ids, 8864)
   end
 
   test "gets an story from previously saved stories", %{stories: stories} do
@@ -38,5 +47,21 @@ defmodule HackerAggregator.Aggregator.BackgroundTest do
     assert %Story{} = story1
     story = hd(stories)
     assert story == story1
+  end
+
+  test "get top stories - more than available", %{stories: stories} do
+    assert true = InMemoryDB.save(stories)
+    top_stories = InMemoryDB.top_stories()
+    assert length(top_stories) == 2
+    story_ids = Enum.map(top_stories, & &1.id)
+
+    assert Enum.member?(story_ids, 8863)
+    assert Enum.member?(story_ids, 8864)
+  end
+
+  test "get top stories - less than available", %{stories: stories} do
+    assert true = InMemoryDB.save(stories)
+    top_stories = InMemoryDB.top_stories(1)
+    assert length(top_stories) == 1
   end
 end
