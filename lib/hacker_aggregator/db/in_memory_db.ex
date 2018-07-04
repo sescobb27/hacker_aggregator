@@ -3,6 +3,8 @@ defmodule HackerAggregator.DB.InMemoryDB do
   @name __MODULE__
   @table :in_memory_db
 
+  alias HackerAggregator.Domain.Story
+
   def start_link(args \\ []) do
     GenServer.start_link(__MODULE__, args, name: @name)
   end
@@ -17,6 +19,7 @@ defmodule HackerAggregator.DB.InMemoryDB do
     {:ok, nil}
   end
 
+  @spec save(list(Story.t())) :: true
   def save(stories) do
     mapped_stories =
       Enum.map(stories, fn story ->
@@ -26,6 +29,7 @@ defmodule HackerAggregator.DB.InMemoryDB do
     :ets.insert(@table, mapped_stories)
   end
 
+  @spec get(list(Story.id())) :: nil | Story.t()
   def get(story_id) do
     case :ets.lookup(@table, story_id) do
       [] -> nil
@@ -37,6 +41,7 @@ defmodule HackerAggregator.DB.InMemoryDB do
     :ets.delete_all_objects(@table)
   end
 
+  @spec top_stories(top_n :: pos_integer()) :: list(Story.t())
   def top_stories(top_n \\ 50) do
     case :ets.match(@table, {:_, :"$1"}, top_n) do
       :"$end_of_table" ->
@@ -48,6 +53,7 @@ defmodule HackerAggregator.DB.InMemoryDB do
     end
   end
 
+  @spec pagination(last_id :: Story.id(), n :: pos_integer()) :: list(Story.t())
   def pagination(last_id, n \\ 10)
   def pagination(0, _), do: top_stories(10)
 
