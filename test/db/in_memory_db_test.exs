@@ -1,4 +1,4 @@
-defmodule HackerAggregator.Aggregator.InMemoryDBTest do
+defmodule HackerAggregator.DB.InMemoryDBTest do
   use ExUnit.Case
 
   alias HackerAggregator.Domain.Story
@@ -49,6 +49,11 @@ defmodule HackerAggregator.Aggregator.InMemoryDBTest do
     assert story == story1
   end
 
+  test "gets nil if story doesn not exist", %{stories: stories} do
+    assert true = InMemoryDB.save(stories)
+    refute InMemoryDB.get(1)
+  end
+
   test "get top stories - more than available", %{stories: stories} do
     assert true = InMemoryDB.save(stories)
     top_stories = InMemoryDB.top_stories()
@@ -63,5 +68,23 @@ defmodule HackerAggregator.Aggregator.InMemoryDBTest do
     assert true = InMemoryDB.save(stories)
     top_stories = InMemoryDB.top_stories(1)
     assert length(top_stories) == 1
+  end
+
+  test "initial pagination", %{stories: stories} do
+    assert true = InMemoryDB.save(stories)
+    stories = InMemoryDB.pagination(0)
+    assert length(stories) == 2
+
+    story_ids = Enum.map(stories, & &1.id)
+
+    assert Enum.member?(story_ids, 8863)
+    assert Enum.member?(story_ids, 8864)
+  end
+
+  test "pagination to start from key", %{stories: stories} do
+    assert true = InMemoryDB.save(stories)
+    story_key = :ets.first(:in_memory_db)
+    [story] = InMemoryDB.pagination(story_key)
+    assert story.id != story_key
   end
 end

@@ -4,7 +4,22 @@ defmodule HackerAggregator.StoriesController do
   alias HackerAggregator.DB.InMemoryDB
 
   def index(conn, params) do
-    page = Map.get(params, "page", 0)
+    try do
+      stories =
+        Map.get(params, "from", "0")
+        |> String.to_integer()
+        |> InMemoryDB.pagination()
+
+      conn
+      |> put_status(:ok)
+      |> render(HackerAggregator.StoryView, "index.json", stories: stories)
+    rescue
+      ArgumentError ->
+        conn
+        |> put_status(:not_found)
+        |> render(HackerAggregator.ErrorView, "404.json")
+        |> halt()
+    end
   end
 
   def show(conn, %{"id" => story_id}) do
@@ -29,6 +44,6 @@ defmodule HackerAggregator.StoriesController do
         |> put_status(:not_found)
         |> render(HackerAggregator.ErrorView, "404.json")
         |> halt()
-      end
+    end
   end
 end

@@ -13,6 +13,7 @@ defmodule HackerAggregator.DB.InMemoryDB do
       :public,
       read_concurrency: true
     ])
+
     {:ok, nil}
   end
 
@@ -21,6 +22,7 @@ defmodule HackerAggregator.DB.InMemoryDB do
       Enum.map(stories, fn story ->
         {story.id, story}
       end)
+
     :ets.insert(@table, mapped_stories)
   end
 
@@ -36,19 +38,32 @@ defmodule HackerAggregator.DB.InMemoryDB do
   end
 
   def top_stories(top_n \\ 50) do
-    case :ets.match(@table, {:'_', :'$1'}, top_n) do
-      :'$end_of_table' -> []
+    case :ets.match(@table, {:_, :"$1"}, top_n) do
+      :"$end_of_table" ->
+        []
+
       {results, _} ->
         results
         |> List.flatten()
     end
   end
 
-  # def all(last_id \\ 0)
-  # def all() do
-  #   :ets.match(@table, '$1', 50)
-  # end
-  # def all(last_id \\ 0) do
-  #   :ets.match(@table, _, 10)
-  # end
+  def pagination(last_id, n \\ 10)
+  def pagination(0, _), do: top_stories(10)
+
+  def pagination(last_id, n) do
+    take(last_id, n)
+  end
+
+  defp take(_, 0), do: []
+
+  defp take(last_id, n) do
+    case :ets.next(@table, last_id) do
+      :"$end_of_table" ->
+        []
+
+      story_id ->
+        [get(story_id) | take(story_id, n - 1)]
+    end
+  end
 end
