@@ -18,7 +18,7 @@ defmodule HackerAggregator.Aggregator.Background do
   end
 
   def init(_args) do
-    schedule_poll()
+    schedule_poll(0)
     {:ok, nil}
   end
 
@@ -30,12 +30,12 @@ defmodule HackerAggregator.Aggregator.Background do
 
   def handle_info(:poll, state) do
     fetch_top_stories()
-    schedule_poll()
+    get_interval()
+    |> schedule_poll()
     {:noreply, state}
   end
 
-  defp schedule_poll() do
-    interval = Application.get_env(:hacker_aggregator, :poll_interval, @five_minutes)
+  defp schedule_poll(interval) do
     Process.send_after(@name, :poll, interval)
   end
 
@@ -63,5 +63,9 @@ defmodule HackerAggregator.Aggregator.Background do
           "error broadcasting channel(stories) event(new_stories) reason: #{inspect(error)}"
         )
     end
+  end
+
+  defp get_interval() do
+    Application.get_env(:hacker_aggregator, :poll_interval, @five_minutes)
   end
 end
